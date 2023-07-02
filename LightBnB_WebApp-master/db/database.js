@@ -1,16 +1,17 @@
-const properties = require("./json/properties.json");
-const users = require("./json/users.json");
 const { Pool } = require('pg');
 /// Users
 const pool = new Pool({
   user: 'vagrant',
   password: '123',
   host: 'localhost',
-  database: 'Lightbnb'
-  
+  database: 'lightbnb',
+  port: 5432
 });
 
-pool.query(`SELECT title FROM properties LIMIT 10;`).then(response => {console.log(response)})
+const properties = require("./json/properties.json");
+const users = require("./json/users.json");
+
+// pool.query(`SELECT title FROM properties LIMIT 10;`).then(response => {console.log(response)})
 
 /**
  * Get a single user from the database given their email.
@@ -172,6 +173,8 @@ const getAllProperties = (options, limit = 10) => {
     LIMIT $${queryParams.length};
   `;
 
+  console.log(queryString, queryParams);
+
   return pool
     .query(queryString, queryParams)
     .then((result) => {
@@ -225,6 +228,8 @@ const addProperty = function (property) {
   )
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
   RETURNING *;`;
+
+  console.log(queryString, queryParams);
 
   return pool
     .query(queryString, queryParams)
