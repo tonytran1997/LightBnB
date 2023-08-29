@@ -11,8 +11,6 @@ const pool = new Pool({
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
 
-// pool.query(`SELECT title FROM properties LIMIT 10;`).then(response => {console.log(response)})
-
 /**
  * Get a single user from the database given their email.
  * @param {String} email The email of the user.
@@ -66,12 +64,14 @@ const addUser = function (user) {
   return pool
     .query(`INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *`, [user.name, user.email, user.password])
     .then((result) => {
-      return result;
+      return login({ email: user.email, password: user.password })
+        .then(() => result.rows[0]);
     })
     .catch((err) => {
       throw err;
     });
 };
+
 
 /// Reservations
 
@@ -166,16 +166,12 @@ const getAllProperties = (options, limit = 10) => {
     LIMIT $${queryParams.length};
   `;
 
-  console.log(queryString, queryParams);
-
   return pool
     .query(queryString, queryParams)
     .then((result) => {
-      console.log(result.rows);
       return result.rows;
     })
     .catch((err) => {
-      console.log(err);
       throw err
     });
 };
@@ -185,13 +181,15 @@ const getAllProperties = (options, limit = 10) => {
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function (property) {
+  const costPerNightCents = property.cost_per_night * 100; 
+
   const queryParams = [
     property.owner_id, 
     property.title,
     property.description,
     property.thumbnail_photo_url,
     property.cover_photo_url,
-    property.cost_per_night,
+    costPerNightCents,
     property.street,
     property.city,
     property.province,
@@ -222,19 +220,16 @@ const addProperty = function (property) {
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
   RETURNING *;`;
 
-  console.log(queryString, queryParams);
-
   return pool
     .query(queryString, queryParams)
     .then((result) => {
-      console.log(result.rows);
       return result.rows;
     })
     .catch((err) => {
-      console.log(err);
       throw err
     });
 };
+
 
 module.exports = {
   getUserWithEmail,
